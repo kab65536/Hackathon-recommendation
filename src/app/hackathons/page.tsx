@@ -1,19 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { mockHackathons } from "@/data/mockHackathons";
 import HackathonCard from "@/components/HackathonCard";
 
 export default function HackathonsPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState("date");
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
-  // 全タグを重複なしで抽出
+  useEffect(() => {
+    const stored = localStorage.getItem("favorites");
+    if (stored) {
+      setFavorites(JSON.parse(stored));
+    }
+  }, []);
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((prev) => {
+      const updated = prev.includes(id)
+        ? prev.filter((fav) => fav !== id)
+        : [...prev, id];
+
+      localStorage.setItem("favorites", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const allTags = Array.from(
     new Set(mockHackathons.flatMap((h) => h.tags))
   );
 
-  // タグ + 検索 両方適用
+  // ① フィルタ
   const filteredHackathons = mockHackathons.filter((h) => {
     const matchesTag = selectedTag
       ? h.tags.includes(selectedTag)
@@ -23,14 +43,34 @@ export default function HackathonsPage() {
       h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesTag && matchesSearch;
+    const matchesFavorite = showOnlyFavorites
+      ? favorites.includes(h.id)
+      : true;
+
+    return matchesTag && matchesSearch && matchesFavorite;
+  });
+
+  // ② ソート（filterの外に書く）
+  const sortedHackathons = [...filteredHackathons].sort((a, b) => {
+    if (sortOption === "name") {
+      return a.name.localeCompare(b.name);
+    }
+
+    if (sortOption === "favorites") {
+      return (
+        Number(favorites.includes(b.id)) -
+        Number(favorites.includes(a.id))
+      );
+    }
+
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
 
   return (
     <main style={{ padding: "2rem" }}>
       <h1>Hackathon List</h1>
 
-      {/* 🔍 検索バー */}
+      {/* 検索 */}
       <input
         type="text"
         placeholder="Search hackathons..."
@@ -44,9 +84,39 @@ export default function HackathonsPage() {
         }}
       />
 
-      <p>{filteredHackathons.length} 件表示中</p>
+      {/* お気に入り表示切替 */}
+      <button
+        onClick={() => setShowOnlyFavorites((prev) => !prev)}
+        style={{
+          marginBottom: "1rem",
+          padding: "0.4rem 0.8rem",
+          backgroundColor: showOnlyFavorites ? "#333" : "#eee",
+          color: showOnlyFavorites ? "#fff" : "#000",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        {showOnlyFavorites ? "Show All" : "Show Favorites"}
+      </button>
 
-      {/* タグ選択ボタン */}
+      {/* ソート */}
+      <select
+        value={sortOption}
+        onChange={(e) => setSortOption(e.target.value)}
+        style={{
+          marginBottom: "1rem",
+          padding: "0.4rem",
+          display: "block",
+        }}
+      >
+        <option value="date">Sort by Date</option>
+        <option value="name">Sort by Name</option>
+        <option value="favorites">Favorites First</option>
+      </select>
+
+      <p>{sortedHackathons.length} 件表示中</p>
+
+      {/* タグ */}
       <div style={{ marginBottom: "1.5rem" }}>
         <button
           onClick={() => setSelectedTag(null)}
@@ -80,10 +150,25 @@ export default function HackathonsPage() {
         ))}
       </div>
 
-      {/* 一覧表示 */}
-      {filteredHackathons.map((hackathon) => (
-        <HackathonCard key={hackathon.id} hackathon={hackathon} />
+      {/* 一覧 */}
+      <div
+      style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+      gap: "1.5rem",
+      marginTop: "1rem",
+      }}
+      >
+      {sortedHackathons.map((hackathon) => (
+      <HackathonCard
+      key={hackathon.id}
+      hackathon={hackathon}
+      isFavorite={favorites.includes(hackathon.id)}
+      onToggleFavorite={toggleFavorite}
+      />
       ))}
+      </div>
+
     </main>
   );
 }
