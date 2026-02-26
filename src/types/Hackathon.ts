@@ -5,4 +5,6 @@ export interface Hackathon {
   location: string;
   date: string;
   tags: string[];
+  level: string;
+  participationStyle: string;
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { mockHackathons } from "@/data/mockHackathons";
 import HackathonCard from "@/components/HackathonCard";
 
+
 export default function HackathonsPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
