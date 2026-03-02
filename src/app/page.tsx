@@ -1,23 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { Box, Heading, Stack, Link as ChakraLink } from "@chakra-ui/react";
 
 export default function Home() {
   return (
-    <main style={{ padding: "2rem" }}>
-      <h1>Hackathon Recommendation App</h1>
+    <Box p={8}>
+      <Heading size="lg">
+        Hackathon Recommendation App
+      </Heading>
 
-      <div style={{ marginTop: "1rem" }}>
-        <Link href="/hackathons">
+      <Stack mt={6} gap={4}>
+        <ChakraLink as={Link} href="/hackathons">
           Go to Hackathon List
-        </Link>
-      </div>
+        </ChakraLink>
 
-      <div style={{ marginTop: "1rem" }}>
-        <Link href="/profile">
+        <ChakraLink as={Link} href="/profile">
           Edit Profile
-        </Link>
-      </div>
-    </main>
+        </ChakraLink>
+      </Stack>
+    </Box>
   );
 }
