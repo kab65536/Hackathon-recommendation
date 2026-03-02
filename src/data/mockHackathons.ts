@@ -1,4 +1,5 @@
-import { Hackathon } from "@/types/Hackathon";
+import { Hackathon } from "@/types/hackathon";
+
 
 export const mockHackathons: Hackathon[] = [
   {
@@ -9,7 +10,8 @@ export const mockHackathons: Hackathon[] = [
     date: "2026-03-15",
     tags: ["AI", "Machine Learning"],
     level: "Beginner",
-    participationStyle: "Team - Online",
+    participationType: "Team",
+    mode: "Online",
   },
   {
     id: "2",
@@ -19,7 +21,8 @@ export const mockHackathons: Hackathon[] = [
     date: "2026-04-10",
     tags: ["Web3", "Blockchain"],
     level: "Intermediate",
-    participationStyle: "Team - Offline",
+    participationType: "Team",
+    mode: "Offline",
   },
   {
     id: "3",
@@ -29,7 +32,8 @@ export const mockHackathons: Hackathon[] = [
     date: "2026-05-05",
     tags: ["Game", "Unity"],
     level: "Beginner",
-    participationStyle: "Solo - Online",
+    participationType: "Solo",
+    mode: "Online",
   },
   {
     id: "4",
@@ -39,7 +43,8 @@ export const mockHackathons: Hackathon[] = [
     date: "2026-06-01",
     tags: ["IoT", "Hardware"],
     level: "Advanced",
-    participationStyle: "Team - Offline",
+    participationType: "Team",
+    mode: "Offline",
   },
   {
     id: "5",
@@ -49,6 +54,7 @@ export const mockHackathons: Hackathon[] = [
     date: "2026-06-20",
     tags: ["AI", "Research", "Data Science"],
     level: "Advanced",
-    participationStyle: "Solo - Offline",
+    participationType: "Solo",
+    mode: "Offline",
   },
 ];

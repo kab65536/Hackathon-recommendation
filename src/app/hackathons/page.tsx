@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { mockHackathons } from "@/data/mockHackathons";
 import HackathonCard from "@/components/HackathonCard";
-
+import { calculateRecommendation } from "@/app/lib/recommendation";
+import { UserProfile } from "@/types/UserProfile";
 
 export default function HackathonsPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -11,6 +12,16 @@ export default function HackathonsPage() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState("date");
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
+  // 仮ユーザー（後でプロフィールと接続）
+  const mockUser: UserProfile = {
+    interests: ["AI", "Web"],
+    languages: ["TypeScript"],
+    experienceLevel: "Beginner",
+    participationType: "Team",
+    mode: "Online",
+    location: "Tokyo",
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem("favorites");
@@ -51,7 +62,12 @@ export default function HackathonsPage() {
     return matchesTag && matchesSearch && matchesFavorite;
   });
 
-  // ② ソート（filterの外に書く）
+  // ② 推薦計算
+  const recommendedResults = filteredHackathons
+    .map((h) => calculateRecommendation(mockUser, h))
+    .sort((a, b) => b.score - a.score);
+
+  // ③ 通常ソート
   const sortedHackathons = [...filteredHackathons].sort((a, b) => {
     if (sortOption === "name") {
       return a.name.localeCompare(b.name);
@@ -113,9 +129,15 @@ export default function HackathonsPage() {
         <option value="date">Sort by Date</option>
         <option value="name">Sort by Name</option>
         <option value="favorites">Favorites First</option>
+        <option value="recommend">Recommended</option>
       </select>
 
-      <p>{sortedHackathons.length} 件表示中</p>
+      <p>
+        {sortOption === "recommend"
+          ? recommendedResults.length
+          : sortedHackathons.length}{" "}
+        件表示中
+      </p>
 
       {/* タグ */}
       <div style={{ marginBottom: "1.5rem" }}>
@@ -153,23 +175,33 @@ export default function HackathonsPage() {
 
       {/* 一覧 */}
       <div
-      style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-      gap: "1.5rem",
-      marginTop: "1rem",
-      }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "1.5rem",
+          marginTop: "1rem",
+        }}
       >
-      {sortedHackathons.map((hackathon) => (
-      <HackathonCard
-      key={hackathon.id}
-      hackathon={hackathon}
-      isFavorite={favorites.includes(hackathon.id)}
-      onToggleFavorite={toggleFavorite}
-      />
-      ))}
+        {sortOption === "recommend"
+          ? recommendedResults.map(({ hackathon, score, reasons }) => (
+              <HackathonCard
+                key={hackathon.id}
+                hackathon={hackathon}
+                score={score}
+                reasons={reasons}
+                isFavorite={favorites.includes(hackathon.id)}
+                onToggleFavorite={toggleFavorite}
+              />
+            ))
+          : sortedHackathons.map((hackathon) => (
+              <HackathonCard
+                key={hackathon.id}
+                hackathon={hackathon}
+                isFavorite={favorites.includes(hackathon.id)}
+                onToggleFavorite={toggleFavorite}
+              />
+            ))}
       </div>
-
     </main>
   );
 }

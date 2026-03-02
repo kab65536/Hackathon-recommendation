@@ -1,107 +1,64 @@
-"use client";
+import { hackathons } from "@/app/lib/data";
+import { notFound } from "next/navigation";
+import { calculateScore } from "@/app/lib/recommend";
+import { UserProfile } from "@/types/UserProfile";
 
-import { useEffect, useState } from "react";
-import { mockHackathons } from "@/data/mockHackathons";
-import Link from "next/link";
-
-interface Props {
-  params: { id: string };
-}
-
-export default function HackathonDetailPage({ params }: Props) {
-  const hackathon = mockHackathons.find(
-    (h) => h.id === params.id
-  );
-
-  const [userProfile, setUserProfile] = useState<any>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("userProfile");
-    if (stored) {
-      setUserProfile(JSON.parse(stored));
-    }
-  }, []);
-
-  if (!hackathon) {
-    return <div>Not Found</div>;
-  }
-
-  // 🔥 推薦ロジック
-  const levelMap: Record<string, number> = {
-  Beginner: 1,
-  Intermediate: 2,
-  Advanced: 3,
+type Props = {
+  params: {
+    id: string;
+  };
 };
 
-const relatedHackathons = mockHackathons
-  .filter((h) => h.id !== hackathon.id)
-  .map((h) => {
-    let score = 0;
+export default function HackathonDetail({ params }: Props) {
+  const hackathon = hackathons.find((h) => h.id === params.id);
 
-    // ① 今見ているハッカソンとのタグ一致
-    const commonTags = h.tags.filter((tag) =>
-      hackathon.tags.includes(tag)
-    );
-    score += commonTags.length * 2;
+  if (!hackathon) {
+    notFound();
+  }
 
-    if (userProfile) {
-      // ② 興味分野一致
-      const interestMatch = h.tags.filter((tag) =>
-        userProfile.interests?.includes(tag)
-      );
-      score += interestMatch.length * 3;
+  // 仮ユーザー（本来はDBやlocalStorageなどから取得）
+  const user: UserProfile = {
+    interests: ["AI", "Web"],
+    languages: ["TypeScript", "Python"],
+    experienceLevel: "Intermediate",
+    participationType: "Team",
+    mode: "Offline",
+    location: "Tokyo",
+  };
 
-      // ③ レベル距離評価
-      if (
-        userProfile.experienceLevel &&
-        h.level &&
-        levelMap[userProfile.experienceLevel] &&
-        levelMap[h.level]
-      ) {
-        const diff =
-          Math.abs(
-            levelMap[userProfile.experienceLevel] -
-              levelMap[h.level]
-          );
-
-        if (diff === 0) score += 3;      // 完全一致
-        else if (diff === 1) score += 1; // 近い
-      }
-
-      // ④ 参加形式 部分一致
-      if (
-        userProfile.participationStyle &&
-        h.participationStyle
-      ) {
-        const userParts =
-          userProfile.participationStyle.split(" - ");
-        const hackParts =
-          h.participationStyle.split(" - ");
-
-        const matches = userParts.filter((part: string) =>
-          hackParts.includes(part)
-        ).length;
-
-        score += matches * 1.5;
-      }
-    }
-
-    return { ...h, score };
-  })
-  .sort((a, b) => b.score - a.score)
-  .slice(0, 3);
-
+  // 🔥 引数順に注意
+  const result = calculateScore(hackathon, user);
 
   return (
-    <main style={{ padding: "2rem" }}>
+    <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
       <h1>{hackathon.name}</h1>
-      <p>{hackathon.description}</p>
-      <p><strong>Location:</strong> {hackathon.location}</p>
-      <p><strong>Date:</strong> {hackathon.date}</p>
 
-      <div>
+      <p style={{ marginTop: "1rem" }}>
+        {hackathon.description}
+      </p>
+
+      <hr style={{ margin: "2rem 0" }} />
+
+      <section>
+        <p><strong>Location:</strong> {hackathon.location}</p>
+        <p><strong>Date:</strong> {hackathon.date}</p>
+        <p><strong>Level:</strong> {hackathon.level}</p>
+        <p><strong>Participation:</strong> {hackathon.participationType}</p>
+        <p><strong>Mode:</strong> {hackathon.mode}</p>
+      </section>
+
+      <div style={{ marginTop: "1rem" }}>
         {hackathon.tags.map((tag) => (
-          <span key={tag} style={{ marginRight: "0.5rem" }}>
+          <span
+            key={tag}
+            style={{
+              marginRight: "0.5rem",
+              padding: "0.3rem 0.6rem",
+              background: "#eee",
+              borderRadius: "6px",
+              fontSize: "0.8rem",
+            }}
+          >
             #{tag}
           </span>
         ))}
@@ -109,36 +66,44 @@ const relatedHackathons = mockHackathons
 
       <hr style={{ margin: "2rem 0" }} />
 
-      <h2>Recommended Hackathons</h2>
+      <section>
+        <h2>Recommendation Score</h2>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-          gap: "1rem",
-          marginTop: "1rem",
-        }}
-      >
-        {relatedHackathons.map((h) => (
-          <Link
-            key={h.id}
-            href={`/hackathons/${h.id}`}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <div
-              style={{
-                border: "1px solid #ccc",
-                padding: "1rem",
-                borderRadius: "8px",
-                cursor: "pointer",
-              }}
-            >
-              <h3>{h.name}</h3>
-              <p>{h.date}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+        <p>{result.score} 点</p>
+
+        <div
+          style={{
+            background: "#ddd",
+            width: "100%",
+            height: "20px",
+            borderRadius: "10px",
+            overflow: "hidden",
+            marginTop: "0.5rem",
+          }}
+        >
+          <div
+            style={{
+              background: "green",
+              width: `${Math.min(result.score, 100)}%`,
+              height: "100%",
+              transition: "width 0.3s ease",
+            }}
+          />
+        </div>
+
+        {result.reasons.length > 0 && (
+          <>
+            <h3 style={{ marginTop: "1.5rem" }}>
+              Why Recommended
+            </h3>
+            <ul>
+              {result.reasons.map((reason, index) => (
+                <li key={index}>{reason}</li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
     </main>
   );
 }
