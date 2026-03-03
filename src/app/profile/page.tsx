@@ -12,8 +12,6 @@ export type UserProfile = {
   location: string;
 };
 
-/* ========= 表示ラベル定義（英語値 → 日本語表示） ========= */
-
 const interestOptions = [
   { value: "AI", label: "AI" },
   { value: "Web", label: "Web" },
@@ -46,8 +44,6 @@ const modeOptions = [
   { value: "Offline", label: "オフライン" },
 ];
 
-/* ========= デフォルト値（英語） ========= */
-
 const defaultProfile: UserProfile = {
   interests: [],
   languages: [],
@@ -60,8 +56,6 @@ const defaultProfile: UserProfile = {
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
-
-  /* ========= 安全に読み込み ========= */
 
   useEffect(() => {
     const stored = localStorage.getItem("userProfile");
@@ -78,20 +72,14 @@ export default function ProfilePage() {
     }
   }, []);
 
-  /* ========= 保存だけ ========= */
-
   const handleSave = () => {
     localStorage.setItem("userProfile", JSON.stringify(profile));
     alert("プロフィールを保存しました");
   };
 
-  /* ========= 遷移だけ ========= */
-
   const goToDashboard = () => {
     router.push("/dashboard");
   };
-
-  /* ========= 配列トグル ========= */
 
   const toggleArrayValue = (
     field: "interests" | "languages",
@@ -109,7 +97,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <main style={pageStyle}>
+    <div style={pageStyle}>
       <div style={cardStyle}>
         <h1 style={{ marginBottom: "1.5rem" }}>プロフィール設定</h1>
 
@@ -220,11 +208,9 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
-
-/* ========= UI部品 ========= */
 
 function Section({
   title,
@@ -257,8 +243,6 @@ function Checkbox({
     </label>
   );
 }
-
-/* ========= Styles ========= */
 
 const pageStyle: React.CSSProperties = {
   minHeight: "100vh",

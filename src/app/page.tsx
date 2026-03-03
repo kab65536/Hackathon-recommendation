@@ -1,112 +1,109 @@
 "use client";
 
+import {
+  Box,
+  Button,
+  Heading,
+  Text,
+  VStack,
+  HStack,
+  SimpleGrid,
+} from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const router = useRouter();
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "linear-gradient(135deg, #0f172a, #1e293b)",
-        color: "white",
-        textAlign: "center",
-        padding: "2rem",
-      }}
+    <Box
+      minH="100vh"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      position="relative"
+      overflow="hidden"
+      bg="gray.950"
+      color="white"
+      textAlign="center"
+      px="6"
     >
-      <h1 style={{ fontSize: "3rem", marginBottom: "1rem" }}>
-        Hackathon Finder
-      </h1>
+      {/* 背景エフェクト */}
+      <Box
+        position="absolute"
+        inset="0"
+        bgGradient={`
+          radial(circle at 20% 20%, rgba(59,130,246,0.4), transparent 40%),
+          radial(circle at 80% 80%, rgba(168,85,247,0.4), transparent 40%)
+        `}
+        zIndex="0"
+      />
 
-      <p
-        style={{
-          fontSize: "1.2rem",
-          maxWidth: "600px",
-          marginBottom: "2rem",
-          opacity: 0.8,
-        }}
-      >
-        あなたの興味・スキル・参加スタイルに合わせて
-        最適なハッカソンを推薦します。
-      </p>
+      {/* メインコンテンツ */}
+      <VStack gap="8" maxW="1100px" zIndex="1">
+        <Heading size="2xl">Hackathon Finder</Heading>
 
-      <div style={{ display: "flex", gap: "1rem" }}>
-        <button
-          onClick={() => router.push("/profile")}
-          style={buttonPrimary}
-        >
-          はじめる
-        </button>
+        <Text fontSize="lg" maxW="600px" opacity={0.85}>
+          あなたの興味・スキル・参加スタイルに合わせて
+          最適なハッカソンを推薦します。
+        </Text>
 
-        <button
-          onClick={() => router.push("/dashboard")}
-          style={buttonSecondary}
-        >
-          おすすめを見る
-        </button>
-      </div>
+        <HStack gap="4">
+          <Button
+            size="lg"
+            colorPalette="blue"
+            onClick={() => router.push("/profile")}
+          >
+            はじめる
+          </Button>
 
-      <section
-        style={{
-          marginTop: "4rem",
-          display: "grid",
-          gap: "1.5rem",
-          maxWidth: "800px",
-        }}
-      >
-        <Feature
-          title="🎯 パーソナライズ推薦"
-          text="あなたのプロフィールとイベント情報を比較して適合度を算出します。"
-        />
-        <Feature
-          title="⭐ わかりやすい可視化"
-          text="おすすめ度を星やスコアで表示。初心者でも直感的に選べます。"
-        />
-        <Feature
-          title="🔍 詳細検索"
-          text="分野・難易度・日付で絞り込み可能。推薦以外のイベントも確認できます。"
-        />
-      </section>
-    </main>
+          <Button
+            size="lg"
+            variant="outline"
+            colorPalette="blue"
+            onClick={() => router.push("/dashboard")}
+          >
+            おすすめを見る
+          </Button>
+        </HStack>
+
+        <SimpleGrid columns={{ base: 1, md: 3 }} gap="6" mt="12">
+          <Feature
+            title="🎯 パーソナライズ推薦"
+            text="あなたのプロフィールとイベント情報を比較して適合度を算出します。"
+          />
+          <Feature
+            title="⭐ わかりやすい可視化"
+            text="おすすめ度を星やスコアで表示。初心者でも直感的に選べます。"
+          />
+          <Feature
+            title="🔍 詳細検索"
+            text="分野・難易度・日付で絞り込み可能。推薦以外のイベントも確認できます。"
+          />
+        </SimpleGrid>
+      </VStack>
+    </Box>
   );
 }
 
 function Feature({ title, text }: { title: string; text: string }) {
   return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.05)",
-        padding: "1.5rem",
-        borderRadius: "12px",
+    <Box
+      bg="whiteAlpha.200"
+      p="6"
+      borderRadius="2xl"
+      backdropFilter="blur(12px)"
+      border="1px solid"
+      borderColor="whiteAlpha.300"
+      transition="all 0.2s"
+      _hover={{
+        transform: "translateY(-6px)",
+        bg: "whiteAlpha.300",
       }}
     >
-      <h3 style={{ marginBottom: "0.5rem" }}>{title}</h3>
-      <p style={{ opacity: 0.8 }}>{text}</p>
-    </div>
+      <Heading size="md" mb="3">
+        {title}
+      </Heading>
+      <Text opacity={0.85}>{text}</Text>
+    </Box>
   );
 }
-
-const buttonPrimary: React.CSSProperties = {
-  padding: "0.8rem 1.5rem",
-  fontSize: "1rem",
-  borderRadius: "8px",
-  border: "none",
-  backgroundColor: "#3b82f6",
-  color: "white",
-  cursor: "pointer",
-};
-
-const buttonSecondary: React.CSSProperties = {
-  padding: "0.8rem 1.5rem",
-  fontSize: "1rem",
-  borderRadius: "8px",
-  border: "1px solid white",
-  backgroundColor: "transparent",
-  color: "white",
-  cursor: "pointer",
-};
