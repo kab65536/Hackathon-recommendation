@@ -1,64 +1,123 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Box, Heading, Text, VStack, HStack, Badge, Button } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { Hackathon } from "@/types/hackathon";
-import { calculateScore } from "@/app/lib/recommend";
-import { UserProfile } from "@/types/UserProfile";
 
-const hackathons: Hackathon[] = [
+type UserProfile = {
+  interests: string[];
+  languages: string[];
+  experienceLevel: "Beginner" | "Intermediate" | "Advanced";
+  participationType: "Team" | "Solo";
+  mode: "Online" | "Offline";
+  location: string;
+};
+
+type Hackathon = {
+  id: number;
+  title: string;
+  interests: string[];
+  mode: "Online" | "Offline";
+  level: "Beginner" | "Intermediate" | "Advanced";
+};
+
+const mockEvents: Hackathon[] = [
   {
-    id: "1",
-    name: "AI Hack Tokyo",
-    description: "AI focused hackathon",
-    location: "Tokyo",
-    date: "2025-06-01",
-    tags: ["AI", "ML"],
+    id: 1,
+    title: "AI Innovation Hack",
+    interests: ["AI"],
+    mode: "Online",
     level: "Beginner",
-    participationType: "Team",
+  },
+  {
+    id: 2,
+    title: "Web Creator Camp",
+    interests: ["Web"],
     mode: "Offline",
+    level: "Intermediate",
+  },
+  {
+    id: 3,
+    title: "Game Dev Challenge",
+    interests: ["Game"],
+    mode: "Online",
+    level: "Advanced",
   },
 ];
 
-const user: UserProfile = {
-  interests: ["AI"],
-  languages: [],
-  experienceLevel: "Beginner",
-  participationType: "Team",
-  mode: "Online",
-  location: "Tokyo",
-};
-
-export default function Page() {
+export default function DashboardPage() {
   const router = useRouter();
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  const scored = hackathons
-    .map((h) => ({
-      hackathon: h,
-      ...calculateScore(h, user),
-    }))
-    .sort((a, b) => b.score - a.score);
+  useEffect(() => {
+    const stored = localStorage.getItem("userProfile");
+    if (stored) {
+      setProfile(JSON.parse(stored));
+    }
+  }, []);
+
+  if (!profile) {
+    return (
+      <Box p={10}>
+        <Text>プロフィールが見つかりません。</Text>
+        <Button mt={4} onClick={() => router.push("/profile")}>
+          プロフィールを作成する
+        </Button>
+      </Box>
+    );
+  }
+
+  const scoredEvents = mockEvents.map((event) => {
+    let score = 0;
+
+    if (event.mode === profile.mode) score += 30;
+    if (event.level === profile.experienceLevel) score += 30;
+
+    const interestMatch = event.interests.filter((i) =>
+      profile.interests.includes(i)
+    ).length;
+
+    score += interestMatch * 20;
+
+    return { ...event, score };
+  }).sort((a, b) => b.score - a.score);
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>おすすめハッカソン</h1>
+    <Box p={10} maxW="900px" mx="auto">
+      <Heading mb={6}>おすすめハッカソン</Heading>
 
-      <button onClick={() => router.push("/events")}>
-        もっと探す
-      </button>
-
-      {scored.map(({ hackathon, score }) => (
-        <div key={hackathon.id} style={{ marginTop: "1rem" }}>
-          <h3>{hackathon.name}</h3>
-          <p>Score: {score}</p>
-          <button
-            onClick={() => router.push(`/events/${hackathon.id}`)}
+      <VStack gap={6} align="stretch">
+        {scoredEvents.map((event) => (
+          <Box
+            key={event.id}
+            p={6}
+            borderWidth="1px"
+            borderRadius="lg"
+            boxShadow="md"
           >
-            詳細を見る
-          </button>
-        </div>
-      ))}
-    </div>
+            <HStack justify="space-between">
+              <Heading size="md">{event.title}</Heading>
+              <Badge colorScheme="blue">{event.score} 点</Badge>
+            </HStack>
+
+            <Text mt={2}>
+              開催形式: {event.mode === "Online" ? "オンライン" : "オフライン"}
+            </Text>
+            <Text>
+              推奨レベル:{" "}
+              {event.level === "Beginner"
+                ? "初心者"
+                : event.level === "Intermediate"
+                ? "中級者"
+                : "上級者"}
+            </Text>
+          </Box>
+        ))}
+      </VStack>
+
+      <Button mt={10} onClick={() => router.push("/profile")}>
+        プロフィールを編集
+      </Button>
+    </Box>
   );
 }
