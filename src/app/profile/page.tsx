@@ -1,47 +1,97 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-interface UserProfile {
+export type UserProfile = {
   interests: string[];
   languages: string[];
-  experienceLevel: string;
-  experienceYears: number;
-  purpose: string;
-  participationStyle: string;
-}
+  experienceLevel: "Beginner" | "Intermediate" | "Advanced";
+  participationType: "Team" | "Solo";
+  mode: "Online" | "Offline";
+  location: string;
+};
 
-const interestOptions = ["AI", "Web", "Game", "IoT", "Research"];
-const languageOptions = ["JavaScript", "Python", "Java", "C++", "Go"];
-const purposeOptions = ["Job Hunting", "Research", "Skill Up", "Hobby"];
-const participationOptions = [
-  "Team - Online",
-  "Team - Offline",
-  "Solo - Online",
-  "Solo - Offline",
+/* ========= 表示ラベル定義（英語値 → 日本語表示） ========= */
+
+const interestOptions = [
+  { value: "AI", label: "AI" },
+  { value: "Web", label: "Web" },
+  { value: "Game", label: "ゲーム" },
+  { value: "IoT", label: "IoT" },
+  { value: "Research", label: "研究" },
 ];
 
+const languageOptions = [
+  { value: "JavaScript", label: "JavaScript" },
+  { value: "Python", label: "Python" },
+  { value: "Java", label: "Java" },
+  { value: "C++", label: "C++" },
+  { value: "Go", label: "Go" },
+];
+
+const experienceOptions = [
+  { value: "Beginner", label: "初心者" },
+  { value: "Intermediate", label: "中級者" },
+  { value: "Advanced", label: "上級者" },
+];
+
+const participationOptions = [
+  { value: "Team", label: "チーム参加" },
+  { value: "Solo", label: "個人参加" },
+];
+
+const modeOptions = [
+  { value: "Online", label: "オンライン" },
+  { value: "Offline", label: "オフライン" },
+];
+
+/* ========= デフォルト値（英語） ========= */
+
+const defaultProfile: UserProfile = {
+  interests: [],
+  languages: [],
+  experienceLevel: "Beginner",
+  participationType: "Team",
+  mode: "Online",
+  location: "",
+};
+
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<UserProfile>({
-    interests: [],
-    languages: [],
-    experienceLevel: "",
-    experienceYears: 0,
-    purpose: "",
-    participationStyle: "",
-  });
+  const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
+
+  /* ========= 安全に読み込み ========= */
 
   useEffect(() => {
     const stored = localStorage.getItem("userProfile");
     if (stored) {
-      setProfile(JSON.parse(stored));
+      try {
+        const parsed = JSON.parse(stored);
+        setProfile({
+          ...defaultProfile,
+          ...parsed,
+        });
+      } catch {
+        setProfile(defaultProfile);
+      }
     }
   }, []);
 
+  /* ========= 保存だけ ========= */
+
   const handleSave = () => {
     localStorage.setItem("userProfile", JSON.stringify(profile));
-    alert("Profile Saved!");
+    alert("プロフィールを保存しました");
   };
+
+  /* ========= 遷移だけ ========= */
+
+  const goToDashboard = () => {
+    router.push("/dashboard");
+  };
+
+  /* ========= 配列トグル ========= */
 
   const toggleArrayValue = (
     field: "interests" | "languages",
@@ -59,95 +109,195 @@ export default function ProfilePage() {
   };
 
   return (
-    <main style={{ padding: "2rem" }}>
-      <h1>User Profile</h1>
+    <main style={pageStyle}>
+      <div style={cardStyle}>
+        <h1 style={{ marginBottom: "1.5rem" }}>プロフィール設定</h1>
 
-      <h3>Interests</h3>
-      {interestOptions.map((item) => (
-        <label key={item} style={{ marginRight: "1rem" }}>
+        <Section title="興味分野">
+          {interestOptions.map((item) => (
+            <Checkbox
+              key={item.value}
+              label={item.label}
+              checked={profile.interests.includes(item.value)}
+              onChange={() => toggleArrayValue("interests", item.value)}
+            />
+          ))}
+        </Section>
+
+        <Section title="使用言語">
+          {languageOptions.map((item) => (
+            <Checkbox
+              key={item.value}
+              label={item.label}
+              checked={profile.languages.includes(item.value)}
+              onChange={() => toggleArrayValue("languages", item.value)}
+            />
+          ))}
+        </Section>
+
+        <Section title="経験レベル">
+          <select
+            value={profile.experienceLevel}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                experienceLevel: e.target.value as UserProfile["experienceLevel"],
+              })
+            }
+            style={inputStyle}
+          >
+            {experienceOptions.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </Section>
+
+        <Section title="参加形式">
+          <select
+            value={profile.participationType}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                participationType:
+                  e.target.value as UserProfile["participationType"],
+              })
+            }
+            style={inputStyle}
+          >
+            {participationOptions.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </Section>
+
+        <Section title="開催形式">
+          <select
+            value={profile.mode}
+            onChange={(e) =>
+              setProfile({
+                ...profile,
+                mode: e.target.value as UserProfile["mode"],
+              })
+            }
+            style={inputStyle}
+          >
+            {modeOptions.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </Section>
+
+        <Section title="居住地">
           <input
-            type="checkbox"
-            checked={profile.interests.includes(item)}
-            onChange={() => toggleArrayValue("interests", item)}
+            value={profile.location ?? ""}
+            onChange={(e) =>
+              setProfile({ ...profile, location: e.target.value })
+            }
+            style={inputStyle}
           />
-          {item}
-        </label>
-      ))}
+        </Section>
 
-      <h3>Programming Languages</h3>
-      {languageOptions.map((item) => (
-        <label key={item} style={{ marginRight: "1rem" }}>
-          <input
-            type="checkbox"
-            checked={profile.languages.includes(item)}
-            onChange={() => toggleArrayValue("languages", item)}
-          />
-          {item}
-        </label>
-      ))}
+        <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
+          <button style={primaryButton} onClick={handleSave}>
+            保存
+          </button>
 
-      <h3>Experience Level</h3>
-      <select
-        value={profile.experienceLevel}
-        onChange={(e) =>
-          setProfile({ ...profile, experienceLevel: e.target.value })
-        }
-      >
-        <option value="">Select</option>
-        <option value="Beginner">Beginner</option>
-        <option value="Intermediate">Intermediate</option>
-        <option value="Advanced">Advanced</option>
-      </select>
+          <button style={secondaryButton} onClick={goToDashboard}>
+            おすすめを見る
+          </button>
 
-      <h3>Years of Experience</h3>
-      <input
-        type="number"
-        value={profile.experienceYears}
-        onChange={(e) =>
-          setProfile({
-            ...profile,
-            experienceYears: Number(e.target.value),
-          })
-        }
-      />
-
-      <h3>Purpose</h3>
-      <select
-        value={profile.purpose}
-        onChange={(e) =>
-          setProfile({ ...profile, purpose: e.target.value })
-        }
-      >
-        <option value="">Select</option>
-        {purposeOptions.map((item) => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
-
-      <h3>Participation Style</h3>
-      <select
-        value={profile.participationStyle}
-        onChange={(e) =>
-          setProfile({
-            ...profile,
-            participationStyle: e.target.value,
-          })
-        }
-      >
-        <option value="">Select</option>
-        {participationOptions.map((item) => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
-
-      <br />
-      <br />
-
-      <button onClick={handleSave}>Save Profile</button>
+          <button
+            style={secondaryButton}
+            onClick={() => router.push("/")}
+          >
+            トップへ戻る
+          </button>
+        </div>
+      </div>
     </main>
   );
 }
+
+/* ========= UI部品 ========= */
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ marginBottom: "1.5rem" }}>
+      <h3 style={{ marginBottom: "0.5rem" }}>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function Checkbox({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label style={{ marginRight: "1rem" }}>
+      <input type="checkbox" checked={checked} onChange={onChange} />
+      {label}
+    </label>
+  );
+}
+
+/* ========= Styles ========= */
+
+const pageStyle: React.CSSProperties = {
+  minHeight: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  background: "#f1f5f9",
+  padding: "2rem",
+};
+
+const cardStyle: React.CSSProperties = {
+  background: "white",
+  padding: "2rem",
+  borderRadius: "12px",
+  width: "100%",
+  maxWidth: "700px",
+  boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "0.5rem",
+  borderRadius: "6px",
+  border: "1px solid #ccc",
+};
+
+const primaryButton: React.CSSProperties = {
+  padding: "0.8rem 1.5rem",
+  borderRadius: "8px",
+  border: "none",
+  backgroundColor: "#3b82f6",
+  color: "white",
+  cursor: "pointer",
+};
+
+const secondaryButton: React.CSSProperties = {
+  padding: "0.8rem 1.5rem",
+  borderRadius: "8px",
+  border: "1px solid #ccc",
+  backgroundColor: "white",
+  cursor: "pointer",
+};
