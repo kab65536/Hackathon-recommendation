@@ -1,206 +1,83 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { mockHackathons } from "@/data/mockHackathons";
-import HackathonCard from "@/components/HackathonCard";
-import { calculateRecommendation } from "@/app/lib/recommendation";
-import { UserProfile } from "@/types/UserProfile";
+import { useState } from "react";
+import Link from "next/link";
+import { hackathons } from "@/app/lib/data";
 
 export default function HackathonsPage() {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState("date");
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+  const [query, setQuery] = useState("");
 
-  // 仮ユーザー（後でプロフィールと接続）
-  const mockUser: UserProfile = {
-    interests: ["AI", "Web"],
-    languages: ["TypeScript"],
-    experienceLevel: "Beginner",
-    participationType: "Team",
-    mode: "Online",
-    location: "Tokyo",
-  };
+  const filtered = hackathons.filter((h) => {
+    const q = query.toLowerCase();
 
-  useEffect(() => {
-    const stored = localStorage.getItem("favorites");
-    if (stored) {
-      setFavorites(JSON.parse(stored));
-    }
-  }, []);
-
-  const toggleFavorite = (id: string) => {
-    setFavorites((prev) => {
-      const updated = prev.includes(id)
-        ? prev.filter((fav) => fav !== id)
-        : [...prev, id];
-
-      localStorage.setItem("favorites", JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const allTags = Array.from(
-    new Set(mockHackathons.flatMap((h) => h.tags))
-  );
-
-  // ① フィルタ
-  const filteredHackathons = mockHackathons.filter((h) => {
-    const matchesTag = selectedTag
-      ? h.tags.includes(selectedTag)
-      : true;
-
-    const matchesSearch =
-      h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      h.description.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesFavorite = showOnlyFavorites
-      ? favorites.includes(h.id)
-      : true;
-
-    return matchesTag && matchesSearch && matchesFavorite;
-  });
-
-  // ② 推薦計算
-  const recommendedResults = filteredHackathons
-    .map((h) => calculateRecommendation(mockUser, h))
-    .sort((a, b) => b.score - a.score);
-
-  // ③ 通常ソート
-  const sortedHackathons = [...filteredHackathons].sort((a, b) => {
-    if (sortOption === "name") {
-      return a.name.localeCompare(b.name);
-    }
-
-    if (sortOption === "favorites") {
-      return (
-        Number(favorites.includes(b.id)) -
-        Number(favorites.includes(a.id))
-      );
-    }
-
-    return new Date(a.date).getTime() - new Date(b.date).getTime();
+    return (
+      h.name.toLowerCase().includes(q) ||
+      h.description.toLowerCase().includes(q) ||
+      h.tags.join(" ").toLowerCase().includes(q)
+    );
   });
 
   return (
-    <main style={{ padding: "2rem" }}>
-      <h1>Hackathon List</h1>
+    <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
+      <h1>ハッカソン一覧</h1>
 
-      {/* 検索 */}
       <input
-        type="text"
         placeholder="Search hackathons..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
         style={{
-          marginBottom: "1rem",
-          padding: "0.5rem",
-          width: "300px",
-          display: "block",
+          width: "100%",
+          padding: "10px",
+          margin: "20px 0",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
         }}
       />
 
-      {/* お気に入り表示切替 */}
-      <button
-        onClick={() => setShowOnlyFavorites((prev) => !prev)}
-        style={{
-          marginBottom: "1rem",
-          padding: "0.4rem 0.8rem",
-          backgroundColor: showOnlyFavorites ? "#333" : "#eee",
-          color: showOnlyFavorites ? "#fff" : "#000",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        {showOnlyFavorites ? "Show All" : "Show Favorites"}
-      </button>
-
-      {/* ソート */}
-      <select
-        value={sortOption}
-        onChange={(e) => setSortOption(e.target.value)}
-        style={{
-          marginBottom: "1rem",
-          padding: "0.4rem",
-          display: "block",
-        }}
-      >
-        <option value="date">Sort by Date</option>
-        <option value="name">Sort by Name</option>
-        <option value="favorites">Favorites First</option>
-        <option value="recommend">Recommended</option>
-      </select>
-
-      <p>
-        {sortOption === "recommend"
-          ? recommendedResults.length
-          : sortedHackathons.length}{" "}
-        件表示中
-      </p>
-
-      {/* タグ */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <button
-          onClick={() => setSelectedTag(null)}
-          style={{
-            marginRight: "0.5rem",
-            backgroundColor: selectedTag === null ? "#333" : "#eee",
-            color: selectedTag === null ? "#fff" : "#000",
-            padding: "0.4rem 0.8rem",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          All
-        </button>
-
-        {allTags.map((tag) => (
-          <button
-            key={tag}
-            onClick={() => setSelectedTag(tag)}
+      <div style={{ display: "grid", gap: "1rem" }}>
+        {filtered.map((h) => (
+          <div
+            key={h.id}
             style={{
-              marginRight: "0.5rem",
-              backgroundColor: selectedTag === tag ? "#333" : "#eee",
-              color: selectedTag === tag ? "#fff" : "#000",
-              padding: "0.4rem 0.8rem",
-              border: "none",
-              cursor: "pointer",
+              border: "1px solid #ddd",
+              padding: "1rem",
+              borderRadius: "10px",
             }}
           >
-            {tag}
-          </button>
-        ))}
-      </div>
+            <h2>{h.name}</h2>
 
-      {/* 一覧 */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: "1.5rem",
-          marginTop: "1rem",
-        }}
-      >
-        {sortOption === "recommend"
-          ? recommendedResults.map(({ hackathon, score, reasons }) => (
-              <HackathonCard
-                key={hackathon.id}
-                hackathon={hackathon}
-                score={score}
-                reasons={reasons}
-                isFavorite={favorites.includes(hackathon.id)}
-                onToggleFavorite={toggleFavorite}
-              />
-            ))
-          : sortedHackathons.map((hackathon) => (
-              <HackathonCard
-                key={hackathon.id}
-                hackathon={hackathon}
-                isFavorite={favorites.includes(hackathon.id)}
-                onToggleFavorite={toggleFavorite}
-              />
-            ))}
+            <p>{h.description}</p>
+
+            <div style={{ marginTop: "0.5rem" }}>
+              {h.tags.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    marginRight: "6px",
+                    fontSize: "0.8rem",
+                    background: "#eee",
+                    padding: "3px 6px",
+                    borderRadius: "5px",
+                  }}
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+
+            <Link href={`/hackathons/${h.id}`}>
+              <button
+                style={{
+                  marginTop: "10px",
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                }}
+              >
+                詳細を見る
+              </button>
+            </Link>
+          </div>
+        ))}
       </div>
     </main>
   );

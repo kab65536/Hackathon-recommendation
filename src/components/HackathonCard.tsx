@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Hackathon } from "@/types/hackathon";
+import StarRating from "@/components/StarRating";
 
 type Props = {
   hackathon: Hackathon;
@@ -26,9 +27,9 @@ export default function HackathonCard({
         padding: "1rem",
         borderRadius: "8px",
         transition: "0.2s ease",
+        marginBottom: "1rem",
       }}
     >
-      {/* カード全体をリンク化 */}
       <Link
         href={`/hackathons/${hackathon.id}`}
         style={{
@@ -38,20 +39,17 @@ export default function HackathonCard({
         }}
       >
         <h2>{hackathon.name}</h2>
+
         <p>{hackathon.description}</p>
 
-        {score !== undefined && (
-          <p>
-            <strong>Score:</strong> {score}
-          </p>
-        )}
+        {score !== undefined && <StarRating score={score} />}
 
         {reasons && reasons.length > 0 && (
           <div style={{ marginBottom: "0.5rem" }}>
-            <strong>Reasons:</strong>
+            <strong>おすすめ理由</strong>
             <ul>
-              {reasons.map((reason, index) => (
-                <li key={index}>{reason}</li>
+              {reasons.map((reason, i) => (
+                <li key={i}>{reason}</li>
               ))}
             </ul>
           </div>
@@ -72,15 +70,30 @@ export default function HackathonCard({
             </span>
           ))}
         </div>
+
+        <button
+          style={{
+            marginTop: "1rem",
+            padding: "0.5rem 1rem",
+            background: "#3182ce",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            width: "100%",
+          }}
+        >
+          詳細を見る
+        </button>
       </Link>
 
-      {/* お気に入りボタンは遷移させない */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onToggleFavorite(hackathon.id);
         }}
         style={{
+          marginTop: "0.5rem",
           color: isFavorite ? "red" : "gray",
           background: "transparent",
           border: "none",

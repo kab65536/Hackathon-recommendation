@@ -1,22 +1,46 @@
+import Link from "next/link";
 import { hackathons } from "@/app/lib/data";
 import { notFound } from "next/navigation";
 import { calculateScore } from "@/app/lib/recommend";
 import { UserProfile } from "@/types/UserProfile";
+import StarRating from "@/components/StarRating";
+import FavoriteButton from "@/components/FavoriteButton";
 
-type Props = {
-  params: {
+type PageProps = {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export default function HackathonDetail({ params }: Props) {
-  const hackathon = hackathons.find((h) => h.id === params.id);
+function levelJa(level: string) {
+  if (level === "Beginner") return "初心者";
+  if (level === "Intermediate") return "中級者";
+  if (level === "Advanced") return "上級者";
+  return level;
+}
+
+function modeJa(mode: string) {
+  if (mode === "Online") return "オンライン";
+  if (mode === "Offline") return "オフライン";
+  if (mode === "Hybrid") return "ハイブリッド";
+  return mode;
+}
+
+function participationJa(type: string) {
+  if (type === "Solo") return "個人参加";
+  if (type === "Team") return "チーム参加";
+  return type;
+}
+
+export default async function HackathonDetailPage({ params }: PageProps) {
+  const { id } = await params;
+
+  const hackathon = hackathons.find((h) => h.id === id);
 
   if (!hackathon) {
     notFound();
   }
 
-  // 仮ユーザー（本来はDBやlocalStorageなどから取得）
   const user: UserProfile = {
     interests: ["AI", "Web"],
     languages: ["TypeScript", "Python"],
@@ -26,25 +50,38 @@ export default function HackathonDetail({ params }: Props) {
     location: "Tokyo",
   };
 
-  // 🔥 引数順に注意
   const result = calculateScore(hackathon, user);
 
   return (
     <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-      <h1>{hackathon.name}</h1>
+
+      {/* 戻る */}
+      <Link href="/dashboard">← ダッシュボードに戻る</Link>
+
+      <h1 style={{ marginTop: "1rem" }}>{hackathon.name}</h1>
 
       <p style={{ marginTop: "1rem" }}>
         {hackathon.description}
       </p>
 
+      {/* ⭐ スター表示 */}
+      <div style={{ marginTop: "1rem" }}>
+        <StarRating score={result.score} />
+      </div>
+
+      {/* ❤️ お気に入り */}
+      <div style={{ marginTop: "1rem" }}>
+        <FavoriteButton hackathonId={hackathon.id} />
+      </div>
+
       <hr style={{ margin: "2rem 0" }} />
 
       <section>
-        <p><strong>Location:</strong> {hackathon.location}</p>
-        <p><strong>Date:</strong> {hackathon.date}</p>
-        <p><strong>Level:</strong> {hackathon.level}</p>
-        <p><strong>Participation:</strong> {hackathon.participationType}</p>
-        <p><strong>Mode:</strong> {hackathon.mode}</p>
+        <p><strong>開催場所：</strong>{hackathon.location}</p>
+        <p><strong>開催日：</strong>{hackathon.date}</p>
+        <p><strong>難易度：</strong>{levelJa(hackathon.level)}</p>
+        <p><strong>参加形式：</strong>{participationJa(hackathon.participationType)}</p>
+        <p><strong>開催形式：</strong>{modeJa(hackathon.mode)}</p>
       </section>
 
       <div style={{ marginTop: "1rem" }}>
@@ -67,7 +104,7 @@ export default function HackathonDetail({ params }: Props) {
       <hr style={{ margin: "2rem 0" }} />
 
       <section>
-        <h2>Recommendation Score</h2>
+        <h2>おすすめスコア</h2>
 
         <p>{result.score} 点</p>
 
@@ -86,7 +123,6 @@ export default function HackathonDetail({ params }: Props) {
               background: "green",
               width: `${Math.min(result.score, 100)}%`,
               height: "100%",
-              transition: "width 0.3s ease",
             }}
           />
         </div>
@@ -94,7 +130,7 @@ export default function HackathonDetail({ params }: Props) {
         {result.reasons.length > 0 && (
           <>
             <h3 style={{ marginTop: "1.5rem" }}>
-              Why Recommended
+              おすすめ理由
             </h3>
             <ul>
               {result.reasons.map((reason, index) => (
@@ -104,6 +140,7 @@ export default function HackathonDetail({ params }: Props) {
           </>
         )}
       </section>
+
     </main>
   );
 }

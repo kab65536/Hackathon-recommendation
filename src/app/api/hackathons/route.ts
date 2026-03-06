@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { mockHackathons } from "@/data/mockHackathons";
+import { hackathons } from "@/data/hackathons";
 
 export async function GET() {
-  return NextResponse.json(mockHackathons);
+  return NextResponse.json(hackathons);
 }
