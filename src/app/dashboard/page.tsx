@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { hackathons } from "@/app/lib/data";
 import { calculateScore } from "@/app/lib/recommend";
+import FavoriteButton from "@/components/FavoriteButton";
 
 type UserProfile = {
   interests: string[];
@@ -29,9 +30,11 @@ function getStars(score: number) {
 }
 
 export default function DashboardPage() {
+
   const router = useRouter();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
@@ -46,6 +49,7 @@ export default function DashboardPage() {
     return (
       <Box p={10}>
         <Text>プロフィールが見つかりません。</Text>
+
         <Button mt={4} onClick={() => router.push("/profile")}>
           プロフィール作成
         </Button>
@@ -53,22 +57,65 @@ export default function DashboardPage() {
     );
   }
 
+  /* 🔍 検索 */
+
   const filtered = hackathons.filter((h) => {
+
     const text = search.toLowerCase();
 
     return (
       h.name.toLowerCase().includes(text) ||
       h.tags.some((t) => t.toLowerCase().includes(text))
     );
+
   });
 
+  /* ⭐ 推薦アルゴリズム */
+
+  const recommendations = filtered
+    .map((event) => {
+
+      const result = calculateScore(event, profile);
+
+      return {
+        event,
+        score: result.score,
+        reasons: result.reasons
+      };
+
+    })
+    .sort((a, b) => b.score - a.score);
+
   return (
+
     <Box p={10} maxW="900px" mx="auto">
+
+      {/* ナビゲーションボタン */}
+
+      <HStack mb={6} gap={4}>
+
+        <Button
+          variant="outline"
+          onClick={() => router.push("/profile")}
+        >
+          ← フォームに戻る
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={() => router.push("/")}
+        >
+          🏠 最初の画面に戻る
+        </Button>
+
+      </HStack>
 
       <Heading mb={6}>おすすめハッカソン</Heading>
 
-      {/* 検索バー */}
+      {/* 🔍 検索 */}
+
       <HStack mb={6}>
+
         <Input
           placeholder="AI / Web / Blockchain など"
           value={searchInput}
@@ -81,54 +128,101 @@ export default function DashboardPage() {
         >
           検索
         </Button>
+
       </HStack>
 
       <VStack gap={6} align="stretch">
 
-        {filtered.map((event) => {
+        {recommendations.map(({ event, score, reasons }, index) => (
 
-          const result = calculateScore(event, profile);
+          <Box
+            key={event.id}
+            p={6}
+            borderWidth="1px"
+            borderRadius="lg"
+            boxShadow="md"
+            bg={index < 3 ? "yellow.50" : "white"}
+          >
 
-          return (
-            <Box
-              key={event.id}
-              p={6}
-              borderWidth="1px"
-              borderRadius="lg"
-              boxShadow="md"
-            >
-              <HStack justify="space-between">
+            <HStack justify="space-between">
+
+              <HStack>
+
+                <Text fontWeight="bold" fontSize="lg">
+
+                  {index === 0 && "🥇 1位"}
+                  {index === 1 && "🥈 2位"}
+                  {index === 2 && "🥉 3位"}
+                  {index > 2 && `${index + 1}位`}
+
+                </Text>
 
                 <Heading size="md">
                   {event.name}
                 </Heading>
 
-                {/* スコア */}
-                <Text fontWeight="bold">
-                  {result.score}点
-                </Text>
-
               </HStack>
 
-              {/* 星表示 */}
-              <Text mt={1} fontSize="lg">
-                {getStars(result.score)}
+              <Text fontWeight="bold">
+                {score}点
               </Text>
 
-              <Text mt={2}>開催形式: {event.mode}</Text>
-              <Text>レベル: {event.level}</Text>
+            </HStack>
+
+            <Text mt={1} fontSize="lg">
+              {getStars(score)}
+            </Text>
+
+            <Text mt={2}>
+              開催形式: {event.mode}
+            </Text>
+
+            <Text>
+              レベル: {event.level}
+            </Text>
+
+            {reasons.length > 0 && (
+
+              <Box mt={3}>
+
+                <Text fontWeight="bold">
+                  おすすめ理由
+                </Text>
+
+                <VStack align="start" gap={1}>
+
+                  {reasons.map((r, i) => (
+
+                    <Text key={i} fontSize="sm">
+                      ・{r}
+                    </Text>
+
+                  ))}
+
+                </VStack>
+
+              </Box>
+
+            )}
+
+            {/* ボタン */}
+
+            <HStack mt={4} gap={3}>
 
               <Button
-                mt={3}
                 colorScheme="blue"
                 onClick={() => router.push(`/hackathons/${event.id}`)}
               >
                 詳細を見る
               </Button>
 
-            </Box>
-          );
-        })}
+              <FavoriteButton hackathonId={event.id} />
+
+            </HStack>
+
+          </Box>
+
+        ))}
 
       </VStack>
 

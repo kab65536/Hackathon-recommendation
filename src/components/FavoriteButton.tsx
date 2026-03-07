@@ -1,53 +1,59 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@chakra-ui/react";
 
 type Props = {
   hackathonId: string;
 };
 
 export default function FavoriteButton({ hackathonId }: Props) {
+
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("favorites");
-    if (!saved) return;
 
-    const favorites = JSON.parse(saved);
+    const stored = localStorage.getItem("favorites");
 
-    if (favorites.includes(hackathonId)) {
-      setIsFavorite(true);
+    if (stored) {
+
+      const favs: string[] = JSON.parse(stored);
+      setIsFavorite(favs.includes(hackathonId));
+
     }
+
   }, [hackathonId]);
 
   function toggleFavorite() {
-    const saved = localStorage.getItem("favorites");
-    let favorites: string[] = saved ? JSON.parse(saved) : [];
 
-    if (favorites.includes(hackathonId)) {
-      favorites = favorites.filter((id) => id !== hackathonId);
+    const stored = localStorage.getItem("favorites");
+
+    let favs: string[] = stored ? JSON.parse(stored) : [];
+
+    if (favs.includes(hackathonId)) {
+
+      favs = favs.filter((id) => id !== hackathonId);
       setIsFavorite(false);
+
     } else {
-      favorites.push(hackathonId);
+
+      favs.push(hackathonId);
       setIsFavorite(true);
+
     }
 
-    localStorage.setItem("favorites", JSON.stringify(favorites));
+    localStorage.setItem("favorites", JSON.stringify(favs));
+
   }
 
   return (
-    <button
+
+    <Button
+      colorScheme={isFavorite ? "pink" : "gray"}
       onClick={toggleFavorite}
-      style={{
-        marginTop: "1rem",
-        padding: "8px 14px",
-        borderRadius: "8px",
-        border: "none",
-        cursor: "pointer",
-        background: isFavorite ? "#ff4d6d" : "#ddd",
-      }}
     >
       {isFavorite ? "❤️ お気に入り済み" : "🤍 お気に入り"}
-    </button>
+    </Button>
+
   );
 }

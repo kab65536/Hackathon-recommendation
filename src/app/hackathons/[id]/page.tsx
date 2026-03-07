@@ -1,16 +1,13 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { hackathons } from "@/app/lib/data";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { calculateScore } from "@/app/lib/recommend";
 import { UserProfile } from "@/types/UserProfile";
 import StarRating from "@/components/StarRating";
 import FavoriteButton from "@/components/FavoriteButton";
-
-type PageProps = {
-  params: Promise<{
-    id: string;
-  }>;
-};
 
 function levelJa(level: string) {
   if (level === "Beginner") return "初心者";
@@ -32,23 +29,29 @@ function participationJa(type: string) {
   return type;
 }
 
-export default async function HackathonDetailPage({ params }: PageProps) {
-  const { id } = await params;
+export default function HackathonDetailPage() {
+
+  const params = useParams();
+  const id = params.id as string;
 
   const hackathon = hackathons.find((h) => h.id === id);
+
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("userProfile");
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+  }, []);
 
   if (!hackathon) {
     notFound();
   }
 
-  const user: UserProfile = {
-    interests: ["AI", "Web"],
-    languages: ["TypeScript", "Python"],
-    experienceLevel: "Intermediate",
-    participationType: "Team",
-    mode: "Offline",
-    location: "Tokyo",
-  };
+  if (!user) {
+    return <p style={{ padding: "2rem" }}>Loading...</p>;
+  }
 
   const result = calculateScore(hackathon, user);
 
@@ -64,7 +67,7 @@ export default async function HackathonDetailPage({ params }: PageProps) {
         {hackathon.description}
       </p>
 
-      {/* ⭐ スター表示 */}
+      {/* ⭐ スター */}
       <div style={{ marginTop: "1rem" }}>
         <StarRating score={result.score} />
       </div>
@@ -104,6 +107,7 @@ export default async function HackathonDetailPage({ params }: PageProps) {
       <hr style={{ margin: "2rem 0" }} />
 
       <section>
+
         <h2>おすすめスコア</h2>
 
         <p>{result.score} 点</p>
@@ -132,6 +136,7 @@ export default async function HackathonDetailPage({ params }: PageProps) {
             <h3 style={{ marginTop: "1.5rem" }}>
               おすすめ理由
             </h3>
+
             <ul>
               {result.reasons.map((reason, index) => (
                 <li key={index}>{reason}</li>
@@ -139,6 +144,7 @@ export default async function HackathonDetailPage({ params }: PageProps) {
             </ul>
           </>
         )}
+
       </section>
 
     </main>
