@@ -20,37 +20,33 @@ export default function HomePage() {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      position="relative"
-      overflow="hidden"
-      bg="gray.950"
-      color="white"
-      textAlign="center"
+      bg="gray.50"
       px="6"
     >
-      {/* 背景エフェクト */}
-      <Box
-        position="absolute"
-        inset="0"
-        bgGradient={`
-          radial(circle at 20% 20%, rgba(59,130,246,0.4), transparent 40%),
-          radial(circle at 80% 80%, rgba(168,85,247,0.4), transparent 40%)
-        `}
-        zIndex="0"
-      />
+      <VStack gap="10" maxW="1100px" textAlign="center">
 
-      {/* メインコンテンツ */}
-      <VStack gap="8" maxW="1100px" zIndex="1">
-        <Heading size="2xl">Hackathon Finder</Heading>
+        {/* タイトル */}
 
-        <Text fontSize="lg" maxW="600px" opacity={0.85}>
-          あなたの興味・スキル・参加スタイルに合わせて
-          最適なハッカソンを推薦します。
-        </Text>
+        <VStack gap="4">
+
+          <Heading size="2xl">
+            Hackathon Finder
+          </Heading>
+
+          <Text fontSize="lg" color="gray.600" maxW="600px">
+            あなたの興味・スキル・参加スタイルに合わせて
+            最適なハッカソンを推薦します。
+          </Text>
+
+        </VStack>
+
+        {/* ボタン */}
 
         <HStack gap="4">
+
           <Button
             size="lg"
-            colorPalette="blue"
+            colorScheme="blue"
             onClick={() => router.push("/profile")}
           >
             はじめる
@@ -59,27 +55,39 @@ export default function HomePage() {
           <Button
             size="lg"
             variant="outline"
-            colorPalette="blue"
+            colorScheme="blue"
             onClick={() => router.push("/dashboard")}
           >
             おすすめを見る
           </Button>
+
         </HStack>
 
-        <SimpleGrid columns={{ base: 1, md: 3 }} gap="6" mt="12">
+        {/* 機能紹介 */}
+
+        <SimpleGrid
+          columns={{ base: 1, md: 3 }}
+          gap="6"
+          mt="10"
+        >
+
           <Feature
             title="🎯 パーソナライズ推薦"
-            text="あなたのプロフィールとイベント情報を比較して適合度を算出します。"
+            text="プロフィールとイベント情報を比較し、あなたに合うハッカソンをランキング表示します。"
           />
+
           <Feature
-            title="⭐ わかりやすい可視化"
-            text="おすすめ度を星やスコアで表示。初心者でも直感的に選べます。"
+            title="⭐ わかりやすい評価"
+            text="おすすめ度をスコアと星で表示。初心者でも直感的にイベントを選べます。"
           />
+
           <Feature
-            title="🔍 詳細検索"
-            text="分野・難易度・日付で絞り込み可能。推薦以外のイベントも確認できます。"
+            title="🔍 イベント検索"
+            text="分野やキーワードからハッカソンを検索できます。"
           />
+
         </SimpleGrid>
+
       </VStack>
     </Box>
   );
@@ -88,22 +96,24 @@ export default function HomePage() {
 function Feature({ title, text }: { title: string; text: string }) {
   return (
     <Box
-      bg="whiteAlpha.200"
+      bg="white"
       p="6"
-      borderRadius="2xl"
-      backdropFilter="blur(12px)"
-      border="1px solid"
-      borderColor="whiteAlpha.300"
+      borderRadius="xl"
+      borderWidth="1px"
+      boxShadow="md"
       transition="all 0.2s"
       _hover={{
-        transform: "translateY(-6px)",
-        bg: "whiteAlpha.300",
+        transform: "translateY(-4px)",
+        boxShadow: "lg",
       }}
     >
       <Heading size="md" mb="3">
         {title}
       </Heading>
-      <Text opacity={0.85}>{text}</Text>
+
+      <Text color="gray.600">
+        {text}
+      </Text>
     </Box>
   );
 }
