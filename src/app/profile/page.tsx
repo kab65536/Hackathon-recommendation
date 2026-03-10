@@ -55,9 +55,12 @@ const defaultProfile: UserProfile = {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
 
   useEffect(() => {
+    setMounted(true);
+
     const stored = localStorage.getItem("userProfile");
     if (stored) {
       try {
@@ -71,6 +74,8 @@ export default function ProfilePage() {
       }
     }
   }, []);
+
+  if (!mounted) return null;
 
   const handleSave = () => {
     localStorage.setItem("userProfile", JSON.stringify(profile));
@@ -183,7 +188,7 @@ export default function ProfilePage() {
 
         <Section title="居住地">
           <input
-            value={profile.location ?? ""}
+            value={profile.location}
             onChange={(e) =>
               setProfile({ ...profile, location: e.target.value })
             }
